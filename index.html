@@ -81,22 +81,25 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .lyrics{font-size:var(--fs)}
 .stanza{margin-bottom:1.1em}
 .p{margin:0 0 .35em;line-height:1.5;overflow-wrap:anywhere}
-.p.hasch{line-height:2.55}
-.pre{font-family:var(--mono);color:var(--chord);font-size:.78em;margin:.2em 0 .1em;white-space:pre-wrap}
+.p.hasch{line-height:1.4;margin-bottom:.7em}
+.pre{font-family:var(--mono);font-weight:700;color:var(--chord);font-size:.82em;margin:.4em 0 .15em;white-space:pre-wrap}
 .v-t{font-weight:700}
 .v-h{background:var(--men);border-radius:3px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
 .v-i{font-style:italic;color:var(--muted)}
-.a{position:relative}
-.a::before{content:attr(data-ch);position:absolute;left:0;bottom:1.15em;font-family:var(--mono);font-weight:600;font-size:.74em;line-height:1;color:var(--chord);white-space:nowrap;font-style:normal;pointer-events:none}
-.nochords .a::before,.nochords .pre{display:none}
-.nochords .p.hasch{line-height:1.5}
+.wd{white-space:nowrap}
+.cw{display:inline-block;vertical-align:baseline}
+.cl{display:block;font-family:var(--mono);font-weight:700;font-size:.82em;line-height:1.3;color:var(--chord);padding-right:.3em;margin-bottom:.05em;white-space:pre;font-style:normal}
+.ct{white-space:pre}
+.cl0{padding:0;width:0}
+.nochords .cl,.nochords .pre{display:none}
+.nochords .p.hasch{line-height:1.5;margin-bottom:.35em}
 
 /* edição */
-.editing .p{line-height:2.55}
+.editing .p{line-height:1.6}
+.editing .cl.k{cursor:pointer;background:var(--wine-soft);border-radius:4px;padding:0 .3em;margin-right:.15em}
 .editing .k{cursor:pointer;border-radius:3px}
 .editing .k:hover{background:var(--wine-soft)}
 .editing .k.sel{background:var(--chord);color:var(--paper)}
-.editing .a::before{background:var(--paper);padding:0 2px;border-radius:3px}
 .editbanner{border:1px dashed var(--chord);color:var(--ink);background:var(--card);border-radius:12px;padding:10px 12px;font-size:14px;margin-bottom:14px}
 .warn{border-color:#C9822B}
 .metaform{display:grid;gap:10px;grid-template-columns:1fr 1fr;margin-bottom:14px}
@@ -241,21 +244,30 @@ function textToSong(text) {
 function paraHTML(p, si, pi, k, edit, sel) {
   const ch = {};
   (p.c || []).forEach(([o, c]) => (ch[o] = (ch[o] ? ch[o] + ' ' : '') + trChord(c, k)));
-  let out = '', pos = 0;
-  for (const r of p.r) {
-    let seg = '';
-    for (const c of r.t) {
-      const lab = ch[pos], e = esc(c);
-      if (edit) seg += `<span class="k${lab ? ' a' : ''}${sel === pos ? ' sel' : ''}" data-o="${pos}"${lab ? ` data-ch="${esc(lab)}"` : ''}>${e}</span>`;
-      else seg += lab ? `<span class="a" data-ch="${esc(lab)}">${e}</span>` : e;
-      pos++;
-    }
-    out += `<span class="v-${r.v}">${seg}</span>`;
+  const chars = []; p.r.forEach(r => { for (const c of r.t) chars.push({ c, v: r.v }); });
+  const N = chars.length;
+  const one = i => { const c = chars[i].c, e = c === ' ' ? (ch[i] ? '&nbsp;' : ' ') : esc(c);
+    return edit ? `<span class="k${sel === i ? ' sel' : ''}" data-o="${i}">${e}</span>` : e; };
+  const run = (a, b) => { let s = '', i = a;
+    while (i < b) { const v = chars[i].v; let t = ''; while (i < b && chars[i].v === v) { t += one(i); i++; } s += `<span class="v-${v}">${t}</span>`; }
+    return s; };
+  const label = a => !ch[a] ? '<span class="cl cl0">&#8203;</span>' : `<span class="cl${edit ? ' k' : ''}"${edit ? ` data-o="${a}"` : ''}>${esc(ch[a])}</span>`;
+  let out = '', i = 0;
+  while (i < N) {
+    if (chars[i].c === ' ' && !ch[i]) { out += run(i, i + 1); i++; continue; }
+    let j = i + 1;
+    if (chars[i].c !== ' ') while (j < N && chars[j].c !== ' ') j++;
+    const cuts = []; for (let x = i; x < j; x++) if (ch[x] && x !== i) cuts.push(x);
+    if (!ch[i] && !cuts.length) { out += run(i, j); i = j; continue; }
+    const b = [i, ...cuts, j]; let w = '';
+    for (let n = 0; n < b.length - 1; n++) w += `<span class="cw">${label(b[n])}<span class="ct">${run(b[n], b[n + 1])}</span></span>`;
+    out += `<span class="wd">${w}</span>`; i = j;
   }
-  const late = Object.keys(ch).map(Number).filter(o => o >= pos);
+  const late = Object.keys(ch).map(Number).filter(o => o >= N);
   if (late.length || edit) {
-    const lab = late.map(o => ch[o]).join(' ');
-    out += `<span class="k${lab ? ' a' : ''}${sel === pos ? ' sel' : ''}" data-o="${pos}"${lab ? ` data-ch="${esc(lab)}"` : ''}>${edit ? '&nbsp;&nbsp;' : '&nbsp;'}</span>`;
+    const inner = edit ? `<span class="k${sel === N ? ' sel' : ''}" data-o="${N}">&nbsp;&nbsp;</span>` : '&nbsp;';
+    if (late.length) { ch[N] = late.map(o => ch[o]).join(' '); out += `<span class="wd"><span class="cw">${label(N)}<span class="ct">${inner}</span></span></span>`; }
+    else out += inner;
   }
   const pre = (p.pre || []).map(l => `<div class="pre">${esc(trLine(l, k))}</div>`).join('');
   return `${pre}<p class="p${(p.c || []).length ? ' hasch' : ''}" data-s="${si}" data-p="${pi}">${out}</p>`;
