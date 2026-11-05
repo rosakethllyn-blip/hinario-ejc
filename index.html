@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#9B1C2C">
+<title>Hinário EJC 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@600&display=swap">
+<style>
+/* Layout: uma coluna de leitura (hinário de bolso); lista por dia -> música -> edição com folha inferior. */
+:root{
+  --paper:#FBF8F7; --card:#FFFFFF; --ink:#2B1D1F; --muted:#7A6A6C; --line:#EADFDF;
+  --wine:#9B1C2C; --wine-soft:#F6E4E6; --chord:#1D5C8C; --men:#F7B3AE; --ok:#2F7A4D;
+  --display:"Playfair Display", Georgia, "Times New Roman", serif;
+  --body:"Source Sans 3", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --fs:18px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#17110F; --card:#211917; --ink:#F2E9E7; --muted:#B19E9B; --line:#3A2E2C;
+  --wine:#F08A93; --wine-soft:#3A1F22; --chord:#86C3F0; --men:#6E2A2A; --ok:#7CCB98; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#17110F; --card:#211917; --ink:#F2E9E7; --muted:#B19E9B; --line:#3A2E2C;
+  --wine:#F08A93; --wine-soft:#3A1F22; --chord:#86C3F0; --men:#6E2A2A; --ok:#7CCB98; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0}[hidden]{display:none!important}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{background:var(--paper);color:var(--ink)}
+body{font-family:var(--body);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--chord);outline-offset:2px}
+.wrap{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;gap:10px;padding-block:10px}
+.brand{font-family:var(--display);font-size:22px;font-weight:700;color:var(--wine);margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand small{font-family:var(--body);font-weight:600;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;line-height:1}
+.iconbtn{border:1px solid var(--line);background:var(--card);border-radius:10px;min-width:40px;height:40px;padding:0 10px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:600;font-size:14px}
+.iconbtn.on{background:var(--wine);border-color:var(--wine);color:var(--paper)}
+.primary{background:var(--wine);color:var(--paper);border:0;border-radius:10px;height:42px;padding:0 16px;font-weight:700}
+.ghost{background:transparent;border:1px solid var(--line);border-radius:10px;height:42px;padding:0 14px;font-weight:600}
+.danger{color:#B3261E;border-color:#E9B8B4}
+
+.tabs{display:flex;gap:6px;padding-bottom:10px;overflow-x:auto;scrollbar-width:none}
+.tab{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 14px;font-weight:600;font-size:14px;white-space:nowrap}
+.tab[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.search{width:100%;height:42px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:0 12px;margin-bottom:10px}
+
+.note{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:12px 14px;color:var(--muted);margin-block:14px}
+.note b{color:var(--ink)}
+
+.list{list-style:none;margin:0;padding:0 0 40px}
+.dayhead{font-family:var(--display);color:var(--wine);font-size:20px;margin:22px 0 4px;display:flex;align-items:baseline;gap:8px}
+.dayhead span{font-family:var(--body);font-size:13px;color:var(--muted)}
+.grp{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:14px 0 2px}
+.row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:11px 2px}
+.row .num{font-variant-numeric:tabular-nums;color:var(--wine);font-weight:700;width:28px;flex:none;text-align:right}
+.row .t{flex:1;min-width:0;font-size:17px}
+.row .tag{font-family:var(--mono);font-size:11px;color:var(--chord);border:1px solid var(--line);border-radius:6px;padding:1px 6px;flex:none}
+.trash{margin-top:28px}
+.trash summary{color:var(--muted);font-weight:600;cursor:pointer}
+.trash li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+
+/* música */
+.song{padding-bottom:140px}
+.kicker{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:18px}
+.stitle{font-family:var(--display);font-weight:500;color:var(--wine);font-size:30px;line-height:1.15;margin:2px 0 4px;text-wrap:balance}
+.stitle .n{font-family:var(--body);font-weight:700;font-size:18px;margin-right:8px}
+.meta{color:var(--muted);font-size:13px;margin-bottom:10px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0 14px}
+.tom{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:10px;background:var(--card);height:40px}
+.tom button{border:0;background:none;width:38px;height:38px;font-weight:700;font-size:18px}
+.tom output{min-width:56px;text-align:center;font-family:var(--mono);font-size:13px;color:var(--chord)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted);margin-bottom:12px}
+.legend i{font-style:normal}
+.sw{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:5px;border:1px solid var(--line)}
+
+.lyrics{font-size:var(--fs)}
+.stanza{margin-bottom:1.1em}
+.p{margin:0 0 .35em;line-height:1.5;overflow-wrap:anywhere}
+.p.hasch{line-height:2.55}
+.pre{font-family:var(--mono);color:var(--chord);font-size:.78em;margin:.2em 0 .1em;white-space:pre-wrap}
+.v-t{font-weight:700}
+.v-h{background:var(--men);border-radius:3px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.v-i{font-style:italic;color:var(--muted)}
+.a{position:relative}
+.a::before{content:attr(data-ch);position:absolute;left:0;bottom:1.15em;font-family:var(--mono);font-weight:600;font-size:.74em;line-height:1;color:var(--chord);white-space:nowrap;font-style:normal;pointer-events:none}
+.nochords .a::before,.nochords .pre{display:none}
+.nochords .p.hasch{line-height:1.5}
+
+/* edição */
+.editing .p{line-height:2.55}
+.editing .k{cursor:pointer;border-radius:3px}
+.editing .k:hover{background:var(--wine-soft)}
+.editing .k.sel{background:var(--chord);color:var(--paper)}
+.editing .a::before{background:var(--paper);padding:0 2px;border-radius:3px}
+.editbanner{border:1px dashed var(--chord);color:var(--ink);background:var(--card);border-radius:12px;padding:10px 12px;font-size:14px;margin-bottom:14px}
+.warn{border-color:#C9822B}
+.metaform{display:grid;gap:10px;grid-template-columns:1fr 1fr;margin-bottom:14px}
+.metaform label{display:grid;gap:4px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);min-width:0}
+.metaform .full{grid-column:1/-1}
+.metaform input,.metaform select{height:42px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:0 10px;font-size:16px;text-transform:none;letter-spacing:0;font-weight:400;color:var(--ink);width:100%}
+.savebar{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);border-top:1px solid var(--line);padding-top:10px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+.savebar .wrap{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.savebar .grow{flex:1}
+.status{font-size:13px;color:var(--muted)}
+.status.ok{color:var(--ok)}
+textarea.src{width:100%;min-height:55vh;border:1px solid var(--line);border-radius:12px;background:var(--card);padding:12px;font-family:var(--mono);font-size:14px;line-height:1.6}
+.mk{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.mk button{border:1px solid var(--line);background:var(--card);border-radius:8px;height:36px;padding:0 10px;font-size:14px}
+.help{font-size:13px;color:var(--muted);margin:8px 0 0}
+.help code{font-family:var(--mono);color:var(--chord)}
+
+/* folha do acorde */
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--card);border-top:1px solid var(--line);border-radius:18px 18px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.15);padding-top:12px;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));max-height:85vh;overflow:auto}
+.sheet h3{margin:0;font-size:15px;color:var(--muted);font-weight:600}
+.sheet .ctx{font-size:15px;margin:6px 0 10px}
+.sheet .ctx b{background:var(--chord);color:var(--paper);border-radius:3px;padding:0 2px}
+.chordval{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.chordval input{flex:1;min-width:0;height:46px;border:2px solid var(--chord);border-radius:10px;background:var(--paper);font-family:var(--mono);font-size:20px;padding:0 12px;color:var(--chord)}
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:8px}
+.grid button,.quals button{height:40px;border:1px solid var(--line);border-radius:8px;background:var(--paper);font-family:var(--mono);font-size:15px}
+.quals{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.quals button{padding:0 10px}
+.sheetrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sheetrow .grow{flex:1}
+.lbl{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:4px 0 6px}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;font-size:14px}
+@media (max-width:420px){.metaform{grid-template-columns:1fr}.stitle{font-size:26px}}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(30px);opacity:.6}}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="bar">
+      <button class="iconbtn" id="back" hidden aria-label="Voltar para a lista">←</button>
+      <h1 class="brand" id="brand"><small>Encontro de Jovens com Cristo</small>Hinário EJC 2026</h1>
+      <button class="iconbtn" id="chordToggle" aria-pressed="true" title="Mostrar ou esconder a cifra">Cifra</button>
+    </div>
+    <div id="listControls">
+      <input class="search" id="q" type="search" placeholder="Buscar música ou trecho da letra" autocomplete="off">
+      <div class="tabs" id="tabs" role="group" aria-label="Dia"></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+  <div class="note" id="loading"><b>Carregando as músicas…</b><br>Elas ficam salvas online e aparecem iguais para todo mundo.</div>
+</main>
+
+<div id="savebarHost"></div>
+<div id="sheetHost"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+/* Configuração do banco (Supabase). A chave "anon" é pública por natureza: quem edita precisa da senha da equipe. */
+const SUPABASE_URL = 'COLE_AQUI_A_URL';
+const SUPABASE_KEY = 'COLE_AQUI_A_CHAVE_ANON';
+(() => {
+const DAYS = [['sexta','Sexta','18 de dezembro'],['sabado','Sábado','19 de dezembro'],['domingo','Domingo','20 de dezembro']];
+const DAYNAME = Object.fromEntries(DAYS.map(d => [d[0], d[1]]));
+const S = { songs: [], trash: [], db: null, user: null, uid: null, canWrite: null, loaded: false,
+  day: 'todas', q: '', cur: null, edit: null, textMode: false, sheet: null, saving: false, msg: '', names: {} };
+const $ = s => document.querySelector(s);
+const main = $('#main');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const clone = o => JSON.parse(JSON.stringify(o));
+const store = { get(k, d) { try { const v = localStorage.getItem('ejc.' + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+                set(k, v) { try { localStorage.setItem('ejc.' + k, JSON.stringify(v)); } catch {} } };
+
+let showChords = store.get('chords', true), fontSize = store.get('fs', 18);
+document.documentElement.style.setProperty('--fs', fontSize + 'px');
+
+/* ---------- acordes / transposição ---------- */
+const SH = ['C','C#','D','Eb','E','F','F#','G','G#','A','Bb','B'];
+const IDX = {C:0,'B#':0,'C#':1,Db:1,D:2,'D#':3,Eb:3,E:4,Fb:4,F:5,'E#':5,'F#':6,Gb:6,G:7,'G#':8,Ab:8,A:9,'A#':10,Bb:10,B:11,Cb:11};
+const tr1 = (root, k) => IDX[root] == null ? root : SH[(IDX[root] + k + 120) % 12];
+const trChord = (ch, k) => !k ? ch : ch.replace(/(^|\/|\s|\()([A-G](?:#|b)?)/g, (m, p, r) => p + tr1(r, k));
+const TOKEN = /^\(?([A-G][#b]?)((?:m|maj|min|dim|aug|sus|add|M|º|°|\+|-|\d|\(|\)|#|b)*)(\/[A-G][#b]?)?\)?$/;
+const trLine = (line, k) => !k ? line : line.split(/(\s+)/).map(t => TOKEN.test(t) ? trChord(t, k) : t).join('');
+
+/* ---------- formato de texto para edição ---------- */
+// *todos*  {homens}  <instrução>  mulheres sem marca  [G] acorde  "> " linha só de acordes  linha em branco = nova estrofe
+const OPEN = { t: '*', h: '{', i: '<' }, CLOSE = { t: '*', h: '}', i: '>' };
+function paraToText(p) {
+  const ch = {}; (p.c || []).forEach(([o, c]) => (ch[o] = ch[o] ? ch[o] + ' ' + c : c));
+  let s = '', pos = 0;
+  for (const r of p.r) {
+    let seg = '';
+    for (const c of r.t) { if (ch[pos]) seg += '[' + ch[pos] + ']'; seg += c; pos++; }
+    s += r.v === 'm' ? seg : OPEN[r.v] + seg + CLOSE[r.v];
+  }
+  Object.keys(ch).map(Number).filter(o => o >= pos).forEach(o => (s += '[' + ch[o] + ']'));
+  return s;
+}
+function songToText(song) {
+  const out = song.st.map(st => st.map(p => [...(p.pre || []).map(l => '> ' + l), paraToText(p)].join('\n')).join('\n')).join('\n\n');
+  return out + ((song.tail || []).length ? '\n\n' + song.tail.map(l => '> ' + l).join('\n') : '');
+}
+function textToPara(line) {
+  const runs = [], c = []; let v = 'm', buf = '', pos = 0;
+  const flush = () => { if (!buf) return; if (runs.length && runs[runs.length - 1].v === v) runs[runs.length - 1].t += buf; else runs.push({ t: buf, v }); buf = ''; };
+  for (let i = 0; i < line.length; i++) {
+    const x = line[i];
+    if (x === '[') { const j = line.indexOf(']', i); if (j > i) { const name = line.slice(i + 1, j).trim(); if (name) c.push([pos, name]); i = j; continue; } }
+    if (x === '*') { flush(); v = v === 't' ? 'm' : 't'; continue; }
+    if (x === '{') { flush(); v = 'h'; continue; }
+    if (x === '}') { flush(); v = 'm'; continue; }
+    if (x === '<') { flush(); v = 'i'; continue; }
+    if (x === '>') { flush(); v = 'm'; continue; }
+    buf += x; pos++;
+  }
+  flush();
+  const p = { r: runs.length ? runs : [{ t: '', v: 'm' }] };
+  if (c.length) p.c = c;
+  return p;
+}
+function textToSong(text) {
+  const st = []; let cur = [], pre = [];
+  const lines = text.replace(/\r/g, '').split('\n');
+  const endStanza = () => { if (cur.length) st.push(cur); cur = []; };
+  for (const raw of lines) {
+    const line = raw.replace(/\s+$/, '');
+    if (!line.trim()) { endStanza(); continue; }
+    if (/^>\s?/.test(line)) { pre.push(line.replace(/^>\s?/, '')); continue; }
+    const p = textToPara(line);
+    if (pre.length) { p.pre = pre; pre = []; }
+    cur.push(p);
+  }
+  endStanza();
+  return { st, tail: pre };
+}
+
+/* ---------- render ---------- */
+function paraHTML(p, si, pi, k, edit, sel) {
+  const ch = {};
+  (p.c || []).forEach(([o, c]) => (ch[o] = (ch[o] ? ch[o] + ' ' : '') + trChord(c, k)));
+  let out = '', pos = 0;
+  for (const r of p.r) {
+    let seg = '';
+    for (const c of r.t) {
+      const lab = ch[pos], e = esc(c);
+      if (edit) seg += `<span class="k${lab ? ' a' : ''}${sel === pos ? ' sel' : ''}" data-o="${pos}"${lab ? ` data-ch="${esc(lab)}"` : ''}>${e}</span>`;
+      else seg += lab ? `<span class="a" data-ch="${esc(lab)}">${e}</span>` : e;
+      pos++;
+    }
+    out += `<span class="v-${r.v}">${seg}</span>`;
+  }
+  const late = Object.keys(ch).map(Number).filter(o => o >= pos);
+  if (late.length || edit) {
+    const lab = late.map(o => ch[o]).join(' ');
+    out += `<span class="k${lab ? ' a' : ''}${sel === pos ? ' sel' : ''}" data-o="${pos}"${lab ? ` data-ch="${esc(lab)}"` : ''}>${edit ? '&nbsp;&nbsp;' : '&nbsp;'}</span>`;
+  }
+  const pre = (p.pre || []).map(l => `<div class="pre">${esc(trLine(l, k))}</div>`).join('');
+  return `${pre}<p class="p${(p.c || []).length ? ' hasch' : ''}" data-s="${si}" data-p="${pi}">${out}</p>`;
+}
+function lyricsHTML(song, k, edit, sel) {
+  return song.st.map((st, si) => `<div class="stanza">${st.map((p, pi) =>
+    paraHTML(p, si, pi, k, edit, sel && sel.s === si && sel.p === pi ? sel.o : null)).join('')}</div>`).join('')
+    + (song.tail || []).map(l => `<div class="pre">${esc(trLine(l, k))}</div>`).join('');
+}
+const ordered = () => [...S.songs].sort((a, b) => a.n - b.n || a.id.localeCompare(b.id));
+const numOf = id => ordered().findIndex(s => s.id === id) + 1;
+const fmtDate = t => t ? new Date(t).toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+const nameOf = id => (id && S.names[id]) || id || 'alguém';
+async function resolveNames(ids) {
+  if (!S.user || !ids.length) return;
+  try { const ps = await S.user.profiles([...new Set(ids)]); let changed = false;
+    for (const [id, p] of Object.entries(ps)) if (p.name && S.names[id] !== p.name) { S.names[id] = p.name; changed = true; }
+    if (changed) render(); } catch {}
+}
+
+function renderTabs() {
+  const opts = [['todas', 'Todas'], ...DAYS.map(d => [d[0], d[1]])];
+  $('#tabs').innerHTML = opts.map(([v, l]) => `<button class="tab" data-day="${v}" aria-pressed="${S.day === v}">${l}</button>`).join('');
+}
+
+function renderList() {
+  $('#back').hidden = true; $('#listControls').hidden = false; $('#brand').innerHTML = '<small>Encontro de Jovens com Cristo</small>Hinário EJC 2026';
+  renderTabs();
+  if (!S.loaded) return;
+  const q = norm(S.q.trim());
+  const all = ordered();
+  const hit = s => !q || norm(s.title).includes(q) || norm(s.group || '').includes(q) ||
+    norm(s.st.map(st => st.map(p => p.r.map(r => r.t).join('')).join(' ')).join(' ')).includes(q);
+  let html = '';
+  if (!all.length) html += `<div class="note"><b>Nenhuma música ainda.</b><br>${S.canWrite === false ? 'Assim que alguém da equipe cadastrar, elas aparecem aqui.' : 'Toque em “Nova música” para cadastrar a primeira.'}</div>`;
+  for (const [d, dn, dd] of DAYS) {
+    if (S.day !== 'todas' && S.day !== d) continue;
+    const items = all.filter(s => s.day === d && hit(s));
+    if (!items.length) continue;
+    html += `<h2 class="dayhead">${dn}<span>${dd}</span></h2><ul class="list">`;
+    let lastG = null;
+    for (const s of items) {
+      if (s.group && s.group !== lastG) html += `<li class="grp">${esc(s.group)}</li>`;
+      lastG = s.group;
+      const hasCh = s.st.some(st => st.some(p => (p.c || []).length || (p.pre || []).length));
+      html += `<li><button class="row" data-open="${esc(s.id)}"><span class="num">${numOf(s.id)}</span><span class="t">${esc(s.title)}</span>${hasCh ? '<span class="tag">cifra</span>' : ''}</button></li>`;
+    }
+    html += '</ul>';
+  }
+  if (q && !html.includes('class="row"')) html += `<div class="note">Nenhuma música encontrada para “${esc(S.q)}”.</div>`;
+  if (S.canWrite !== false) html += `<p><button class="ghost" id="newSong">+ Nova música</button></p>`;
+  else html += `<div class="note">Você está só visualizando. Para editar, peça à organização para te convidar como <b>editor</b>.</div>`;
+  if (S.trash.length && S.canWrite !== false) {
+    html += `<details class="trash"><summary>Lixeira (${S.trash.length})</summary><ul class="list">${S.trash.map(t =>
+      `<li><span>${esc(t.title)} <span class="status">· ${DAYNAME[t.day] || ''}</span></span><button class="ghost" data-restore="${esc(t.id)}">Restaurar</button></li>`).join('')}</ul></details>`;
+  }
+  if (S.login) html = loginHTML() + html;
+  if (!needLogin()) html += `<p class="status">Editando como <b>${esc(store.get('nome', ''))}</b> · <button class="ghost" id="logout" style="height:32px">Sair</button></p>`;
+  main.innerHTML = html;
+  $('#savebarHost').innerHTML = '';
+}
+
+function renderSong() {
+  const base = S.songs.find(s => s.id === S.cur);
+  if (!base) { S.cur = null; S.edit = null; return renderList(); }
+  $('#back').hidden = false; $('#listControls').hidden = true; $('#brand').innerHTML = '<small>Hinário EJC 2026</small>' + esc(DAYNAME[base.day] || '');
+  const editing = !!S.edit, song = editing ? S.edit.draft : base;
+  const k = editing ? 0 : store.get('tom.' + base.id, 0);
+  let html = `<article class="song">`;
+  html += `<div class="kicker">${esc(song.group || DAYNAME[song.day] || '')}</div>`;
+  html += `<h2 class="stitle"><span class="n">${numOf(base.id)}</span>${esc(song.title || 'Sem título')}</h2>`;
+  if (base.at) html += `<div class="meta">Editada por ${esc(nameOf(base.by))} · ${fmtDate(base.at)}</div>`;
+
+  if (!editing && S.login) html += loginHTML();
+  if (!editing) {
+    html += `<div class="tools">
+      <div class="tom" role="group" aria-label="Tom"><button data-tom="-1" aria-label="Meio tom abaixo">−</button><output>${k ? (k > 0 ? '+' : '') + k + ' st' : 'Tom'}</output><button data-tom="1" aria-label="Meio tom acima">+</button></div>
+      <button class="iconbtn" data-fs="-1" aria-label="Letra menor">A−</button><button class="iconbtn" data-fs="1" aria-label="Letra maior">A+</button>
+      ${S.canWrite !== false ? '<button class="primary" id="startEdit">Editar</button>' : ''}
+      ${(base.hist || []).length && S.canWrite !== false ? '<button class="ghost" id="showHist">Versões anteriores</button>' : ''}
+    </div>`;
+    html += legendHTML();
+    html += `<div class="lyrics${showChords ? '' : ' nochords'}">${lyricsHTML(song, k, false)}</div>`;
+    if (S.showHist) html += histHTML(base);
+  } else {
+    const e = S.edit;
+    if (e.remote) html += `<div class="editbanner warn"><b>${esc(nameOf(base.by))}</b> salvou esta música enquanto você editava. Se você salvar, a versão dele é substituída (ela fica em “Versões anteriores”).</div>`;
+    html += `<div class="metaform">
+      <label class="full">Título<input id="fTitle" value="${esc(song.title)}"></label>
+      <label>Dia<select id="fDay">${DAYS.map(d => `<option value="${d[0]}"${song.day === d[0] ? ' selected' : ''}>${d[1]}</option>`).join('')}</select></label>
+      <label>Grupo (opcional)<input id="fGroup" list="groups" value="${esc(song.group || '')}" placeholder="Ex.: Trânsito"></label>
+    </div><datalist id="groups">${[...new Set(S.songs.map(s => s.group).filter(Boolean))].map(g => `<option value="${esc(g)}">`).join('')}</datalist>`;
+    html += `<div class="tools"><button class="iconbtn${!S.textMode ? ' on' : ''}" id="modeTap">Acordes</button><button class="iconbtn${S.textMode ? ' on' : ''}" id="modeText">Letra e marcações</button>
+      <button class="ghost" id="moveUp" title="Subir na ordem">↑</button><button class="ghost" id="moveDown" title="Descer na ordem">↓</button></div>`;
+    if (!S.textMode) {
+      html += `<div class="editbanner">Toque na <b>letra</b> onde o acorde deve ficar. Toque numa letra que já tem acorde para trocar, mover com ◀ ▶ ou remover.</div>`;
+      html += legendHTML();
+      html += `<div class="lyrics editing">${lyricsHTML(song, 0, true, S.sheet && { s: S.sheet.s, p: S.sheet.p, o: S.sheet.o })}</div>`;
+    } else {
+      html += `<div class="mk" role="group" aria-label="Marcações">
+        <button data-wrap="*|*"><b>Todos</b></button><button data-wrap="{|}"><span class="sw" style="background:var(--men)"></span>Homens</button>
+        <button data-wrap="|">Mulheres</button><button data-wrap="<|>"><i>Instrução</i></button><button data-wrap="[|]">[Acorde]</button><button data-wrap="> |">Linha de cifra</button></div>`;
+      html += `<textarea class="src" id="src" spellcheck="false">${esc(e.text)}</textarea>`;
+      html += `<p class="help">Selecione um trecho e toque numa marcação. <code>*texto*</code> todos · <code>{texto}</code> homens · sem marca mulheres · <code>&lt;texto&gt;</code> instrução · <code>[G]</code> acorde antes da sílaba · linha começando com <code>&gt; </code> só cifra (ex.: introdução) · linha em branco separa estrofes.</p>`;
+    }
+    html += `<div class="confirm" id="delZone">${S.edit.confirmDel
+      ? `<span>Mandar “${esc(song.title)}” para a lixeira?</span><button class="ghost danger" id="delYes">Sim, apagar</button><button class="ghost" id="delNo">Não</button>`
+      : `<button class="ghost danger" id="delSong">Apagar música</button>`}</div>`;
+  }
+  html += `</article>`;
+  main.innerHTML = html;
+  renderSaveBar();
+}
+function legendHTML() {
+  return `<div class="legend"><i><b>Negrito</b> todos</i><i><span class="sw" style="background:var(--men)"></span>Homens</i><i><span class="sw"></span>Mulheres</i><i><em>Itálico</em> instrução</i></div>`;
+}
+function histHTML(base) {
+  const h = base.hist || [];
+  resolveNames(h.map(x => x.by).filter(Boolean));
+  return `<div class="note"><b>Versões anteriores</b>${h.map((x, i) =>
+    `<div class="confirm"><span class="grow">${fmtDate(x.at) || 'Versão original'} · ${esc(x.by ? nameOf(x.by) : 'hinário impresso')}</span><button class="ghost" data-revert="${i}">Restaurar esta</button></div>`).join('')}</div>`;
+}
+function renderSaveBar() {
+  const host = $('#savebarHost');
+  if (!S.edit) { host.innerHTML = ''; return; }
+  host.innerHTML = `<div class="savebar"><div class="wrap">
+    <span class="status grow${S.msg === 'Salvo para todos' ? ' ok' : ''}" id="status">${esc(S.msg || (S.edit.dirty ? 'Alterações ainda não salvas' : 'Nenhuma alteração'))}</span>
+    <button class="ghost" id="cancelEdit">Cancelar</button>
+    <button class="primary" id="saveEdit"${S.saving ? ' disabled' : ''}>${S.saving ? 'Salvando…' : 'Salvar para todos'}</button></div></div>`;
+}
+
+function renderSheet() {
+  const host = $('#sheetHost');
+  const sh = S.sheet;
+  if (!sh || !S.edit) { host.innerHTML = ''; return; }
+  const p = S.edit.draft.st[sh.s][sh.p];
+  const text = p.r.map(r => r.t).join('');
+  const a = Math.max(0, sh.o - 18), b = Math.min(text.length, sh.o + 18);
+  const ctx = esc(text.slice(a, sh.o)) + '<b>' + (esc(text[sh.o] || ' ') ) + '</b>' + esc(text.slice(sh.o + 1, b));
+  host.innerHTML = `<div class="sheet" role="dialog" aria-label="Acorde"><div class="wrap">
+    <h3>${sh.had ? 'Acorde nesta posição' : 'Novo acorde'}</h3>
+    <div class="ctx">${a > 0 ? '…' : ''}${ctx}${b < text.length ? '…' : ''}</div>
+    <div class="chordval"><button class="iconbtn" data-nudge="-1" aria-label="Mover para a esquerda">◀</button><input id="chIn" value="${esc(sh.val)}" placeholder="ex.: Am7" autocomplete="off" autocapitalize="off"><button class="iconbtn" data-nudge="1" aria-label="Mover para a direita">▶</button></div>
+    <div class="lbl">Nota</div>
+    <div class="grid">${['C','C#','D','Eb','E','F','F#','G','G#','A','Bb','B'].map(r => `<button data-root="${r}">${r}</button>`).join('')}</div>
+    <div class="lbl">Tipo</div>
+    <div class="quals">${['','m','7','m7','7M','sus4','9','add9','º','/'].map(q => `<button data-qual="${q}">${q === '' ? 'maior' : q === '/' ? '/baixo' : q}</button>`).join('')}</div>
+    <div class="sheetrow">${sh.had ? '<button class="ghost danger" id="chDel">Remover</button>' : ''}<span class="grow"></span><button class="ghost" id="chCancel">Cancelar</button><button class="primary" id="chOk">Pronto</button></div>
+  </div></div>`;
+}
+function render() {
+  if (S.cur) renderSong(); else renderList();
+  renderSheet();
+  $('#chordToggle').setAttribute('aria-pressed', String(showChords));
+  $('#chordToggle').classList.toggle('on', showChords);
+}
+
+/* ---------- edição ---------- */
+function startEdit() {
+  const base = S.songs.find(s => s.id === S.cur);
+  const draft = clone({ title: base.title, day: base.day, group: base.group || '', st: base.st, tail: base.tail || [] });
+  S.edit = { draft, baseAt: base.at || 0, dirty: false, remote: false, text: songToText(draft), confirmDel: false };
+  S.textMode = false; S.sheet = null; S.msg = ''; S.showHist = false;
+  render();
+}
+function markDirty() { if (S.edit) { S.edit.dirty = true; S.msg = ''; } }
+function syncText() { // aplica o texto do modo "Letra" ao rascunho
+  const e = S.edit; if (!e || !S.textMode) return;
+  const ta = $('#src'); if (ta) e.text = ta.value;
+  const parsed = textToSong(e.text); e.draft.st = parsed.st; e.draft.tail = parsed.tail;
+}
+function readMeta() {
+  const e = S.edit; if (!e) return;
+  const t = $('#fTitle'), d = $('#fDay'), g = $('#fGroup');
+  if (t) e.draft.title = t.value.trim(); if (d) e.draft.day = d.value; if (g) e.draft.group = g.value.trim();
+}
+function openSheet(s, p, o) {
+  const para = S.edit.draft.st[s][p];
+  const at = (para.c || []).filter(c => c[0] === o).map(c => c[1]).join(' ');
+  S.sheet = { s, p, o, orig: at ? o : null, had: !!at, val: at };
+  render();
+  setTimeout(() => { const el = document.querySelector('.k.sel'); el && el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 30);
+}
+function applySheet(remove) {
+  const sh = S.sheet, para = S.edit.draft.st[sh.s][sh.p];
+  let c = (para.c || []).filter(x => !(sh.orig != null && x[0] === sh.orig));
+  const val = ($('#chIn') ? $('#chIn').value : sh.val).trim();
+  if (!remove && val) { c = c.filter(x => x[0] !== sh.o); c.push([sh.o, val]); }
+  c.sort((a, b) => a[0] - b[0]);
+  if (c.length) para.c = c; else delete para.c;
+  S.sheet = null; markDirty(); S.edit.text = songToText(S.edit.draft); render();
+}
+async function save() {
+  const e = S.edit; if (!e || S.saving) return;
+  readMeta(); syncText();
+  if (!e.draft.title) { S.msg = 'Dê um título para a música antes de salvar.'; renderSaveBar(); return; }
+  const base = S.songs.find(s => s.id === S.cur);
+  const prev = { title: base.title, day: base.day, group: base.group || '', st: base.st, tail: base.tail || [], by: base.by || null, at: base.at || 0 };
+  const hist = [prev, ...(base.hist || [])].slice(0, 8);
+  const body = { n: base.n, ...clone(e.draft), by: S.uid, at: Date.now(), hist };
+  S.saving = true; renderSaveBar();
+  try {
+    await S.db.collection('songs').doc(base.id).set(body);
+    S.edit = null; S.sheet = null; S.msg = 'Salvo para todos'; S.saving = false;
+    render(); flash('Salvo para todos');
+  } catch (err) {
+    S.saving = false;
+    S.msg = err && err.code === 'invalid_argument' ? 'A senha da equipe mudou ou está errada. Saia e entre de novo.' :
+            err && err.code === 'quota_exceeded' ? 'Não deu para salvar. Tente de novo em instantes.' :
+            'Não deu para salvar agora. Confira a internet e tente de novo.';
+    if (err && err.code === 'invalid_argument') store.set('senha', '');
+    renderSaveBar();
+  }
+}
+function flash(t) { const st = $('#status'); if (st) { st.textContent = t; st.classList.add('ok'); } }
+async function swapOrder(dir) {
+  const base = S.songs.find(s => s.id === S.cur); if (!base) return;
+  const day = S.edit ? S.edit.draft.day : base.day;
+  const list = ordered().filter(s => s.day === day);
+  const i = list.findIndex(s => s.id === base.id), j = i + dir;
+  if (i < 0 || j < 0 || j >= list.length) { S.msg = dir < 0 ? 'Já é a primeira do dia.' : 'Já é a última do dia.'; renderSaveBar(); return; }
+  const other = list[j];
+  try {
+    await S.db.collection('songs').doc(base.id).update({ n: other.n });
+    await S.db.collection('songs').doc(other.id).update({ n: base.n });
+    S.msg = 'Ordem salva para todos'; renderSaveBar();
+  } catch { S.msg = 'Não deu para mudar a ordem agora.'; renderSaveBar(); }
+}
+async function deleteSong() {
+  const base = S.songs.find(s => s.id === S.cur); if (!base) return;
+  try {
+    const { id, ...rest } = base;
+    await S.db.collection('trash').doc(id).set({ ...clone(rest), deletedBy: S.uid, deletedAt: Date.now() });
+    await S.db.collection('songs').doc(id).delete();
+    S.edit = null; S.cur = null; S.sheet = null; location.hash = ''; render();
+  } catch { S.msg = 'Não deu para apagar agora.'; renderSaveBar(); }
+}
+async function restoreTrash(id) {
+  const t = S.trash.find(x => x.id === id); if (!t) return;
+  const { id: _i, deletedBy, deletedAt, ...rest } = t;
+  try { await S.db.collection('songs').doc(id).set(rest); await S.db.collection('trash').doc(id).delete(); } catch {}
+}
+async function newSong() {
+  const day = S.day === 'todas' ? 'domingo' : S.day;
+  const inDay = ordered().filter(s => s.day === day);
+  const maxAll = ordered().reduce((m, s) => Math.max(m, s.n), 0);
+  const n = inDay.length ? inDay[inDay.length - 1].n + 0.5 : maxAll + 10;
+  const id = 'm' + Date.now().toString(36);
+  const body = { n, day, group: '', title: 'Nova música', st: [[{ r: [{ t: 'Escreva a letra aqui', v: 'm' }] }]], tail: [], by: S.uid, at: Date.now(), hist: [] };
+  try { await S.db.collection('songs').doc(id).set(body); S.cur = id; location.hash = 'm-' + id;
+    S.songs.push({ id, ...body }); startEdit(); S.textMode = true; render(); }
+  catch (err) { alertNote(err && err.code === 'invalid_argument' ? 'A senha da equipe está errada. Saia e entre de novo.' : 'Não deu para criar a música agora.'); }
+}
+function alertNote(t) { const d = document.createElement('div'); d.className = 'note'; d.innerHTML = '<b>' + esc(t) + '</b>'; main.prepend(d); }
+
+/* ---------- eventos ---------- */
+document.addEventListener('click', ev => {
+  const t = ev.target.closest('button, .k'); if (!t) return;
+  if (t.matches('.tab')) { S.day = t.dataset.day; store.set('day', S.day); return render(); }
+  if (t.dataset.open) { S.cur = t.dataset.open; S.showHist = false; location.hash = 'm-' + S.cur; window.scrollTo(0, 0); return render(); }
+  if (t.id === 'back') { if (S.edit && S.edit.dirty && !S.edit.leaveOk) { S.edit.leaveOk = true; S.msg = 'Você tem alterações não salvas. Toque em ← de novo para sair sem salvar.'; return renderSaveBar(); }
+    S.cur = null; S.edit = null; S.sheet = null; location.hash = ''; return render(); }
+  if (t.id === 'chordToggle') { showChords = !showChords; store.set('chords', showChords); return render(); }
+  if (t.dataset.tom) { const k = (store.get('tom.' + S.cur, 0) + +t.dataset.tom + 18) % 12 - 6; store.set('tom.' + S.cur, k); return render(); }
+  if (t.dataset.fs) { fontSize = Math.min(28, Math.max(14, fontSize + 2 * t.dataset.fs)); store.set('fs', fontSize); document.documentElement.style.setProperty('--fs', fontSize + 'px'); return; }
+  if (t.id === 'startEdit') { if (needLogin()) { S.login = 'edit'; return render(); } return startEdit(); }
+  if (t.id === 'lCancel') { S.login = null; return render(); }
+  if (t.id === 'showHist') { S.showHist = !S.showHist; return render(); }
+  if (t.dataset.revert != null) { const base = S.songs.find(s => s.id === S.cur); const v = base.hist[+t.dataset.revert];
+    startEdit(); Object.assign(S.edit.draft, clone({ title: v.title, day: v.day, group: v.group, st: v.st, tail: v.tail || [] }));
+    S.edit.text = songToText(S.edit.draft); markDirty(); S.msg = 'Versão carregada. Toque em “Salvar para todos” para confirmar.'; return render(); }
+  if (t.id === 'newSong') { if (needLogin()) { S.login = 'new'; window.scrollTo(0, 0); return render(); } return newSong(); }
+  if (t.id === 'logout') { store.set('senha', ''); S.canWrite = null; (S.unsubs || []).forEach(u => u()); S.db = makeDb(''); subscribeAll(); return render(); }
+  if (t.dataset.restore) return restoreTrash(t.dataset.restore);
+  if (!S.edit) return;
+  if (t.id === 'cancelEdit') { S.edit = null; S.sheet = null; S.msg = ''; return render(); }
+  if (t.id === 'saveEdit') return save();
+  if (t.id === 'modeTap' || t.id === 'modeText') { readMeta(); syncText(); S.textMode = t.id === 'modeText'; if (S.textMode) S.edit.text = songToText(S.edit.draft); S.sheet = null; return render(); }
+  if (t.id === 'moveUp' || t.id === 'moveDown') return swapOrder(t.id === 'moveUp' ? -1 : 1);
+  if (t.id === 'delSong') { S.edit.confirmDel = true; readMeta(); syncText(); return render(); }
+  if (t.id === 'delNo') { S.edit.confirmDel = false; return render(); }
+  if (t.id === 'delYes') return deleteSong();
+  if (t.matches('.k')) { readMeta(); const pEl = t.closest('.p'); return openSheet(+pEl.dataset.s, +pEl.dataset.p, +t.dataset.o); }
+  if (t.dataset.wrap != null) { const ta = $('#src'); if (!ta) return; const [o, c] = t.dataset.wrap.split('|');
+    const a = ta.selectionStart, b = ta.selectionEnd, v = ta.value;
+    let sel = v.slice(a, b);
+    if (o === '' ) sel = sel.replace(/[*{}<>]/g, '');
+    if (o === '> ') { const ls = v.lastIndexOf('\n', a - 1) + 1; ta.value = v.slice(0, ls) + '> ' + v.slice(ls); ta.selectionStart = ta.selectionEnd = b + 2; }
+    else { ta.value = v.slice(0, a) + o + sel + c + v.slice(b); const pos = sel ? a + o.length + sel.length + c.length : a + o.length; ta.selectionStart = ta.selectionEnd = pos; }
+    ta.focus(); S.edit.text = ta.value; markDirty(); renderSaveBar(); return; }
+  if (S.sheet) {
+    const sh = S.sheet, inp = $('#chIn');
+    if (t.dataset.root) { const cur = inp.value; const slash = cur.lastIndexOf('/');
+      inp.value = slash >= 0 && slash === cur.length - 1 ? cur + t.dataset.root : t.dataset.root + (cur.match(/^[A-G][#b]?(.*)$/) || [, ''])[1];
+      sh.val = inp.value; return; }
+    if (t.dataset.qual != null) { const q = t.dataset.qual; const m = inp.value.match(/^([A-G][#b]?)(.*?)(\/.*)?$/);
+      if (q === '/') inp.value = (inp.value.split('/')[0] || 'C') + '/'; else inp.value = (m ? m[1] : 'C') + q + (m && m[3] ? m[3] : '');
+      sh.val = inp.value; return; }
+    if (t.dataset.nudge) { sh.val = inp.value; const len = S.edit.draft.st[sh.s][sh.p].r.reduce((n, r) => n + r.t.length, 0);
+      sh.o = Math.max(0, Math.min(len, sh.o + +t.dataset.nudge)); render(); return; }
+    if (t.id === 'chOk') return applySheet(false);
+    if (t.id === 'chDel') return applySheet(true);
+    if (t.id === 'chCancel') { S.sheet = null; return render(); }
+  }
+});
+document.addEventListener('input', ev => {
+  if (ev.target.id === 'q') { S.q = ev.target.value; renderList(); return; }
+  if (!S.edit) return;
+  if (ev.target.id === 'src') { S.edit.text = ev.target.value; markDirty(); const st = $('#status'); if (st) st.textContent = 'Alterações ainda não salvas'; }
+  if (['fTitle', 'fDay', 'fGroup'].includes(ev.target.id)) { readMeta(); markDirty(); const st = $('#status'); if (st) st.textContent = 'Alterações ainda não salvas'; }
+  if (ev.target.id === 'chIn' && S.sheet) S.sheet.val = ev.target.value;
+});
+document.addEventListener('keydown', ev => { if (ev.key === 'Enter' && ev.target.id === 'chIn') applySheet(false); if (ev.key === 'Escape' && S.sheet) { S.sheet = null; render(); } });
+window.addEventListener('hashchange', () => { const m = location.hash.match(/^#m-(.+)$/); if (!S.edit) { S.cur = m ? m[1] : null; render(); } });
+
+/* ---------- dados (Supabase: tabela docs(col, id, data)) ---------- */
+let client = null;
+function makeDb(senha) {
+  client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    global: { headers: senha ? { 'x-senha': senha } : {} }, auth: { persistSession: false } });
+  const fail = error => { const e = new Error(error.message); e.code = /row-level|42501|permission|PGRST116/i.test((error.message || '') + (error.code || '')) ? 'invalid_argument' : 'unavailable'; throw e; };
+  return {
+    collection(col) {
+      return {
+        doc(id) { return {
+          async set(data) { const { error } = await client.from('docs').upsert({ col, id, data }); if (error) fail(error); },
+          async update(patch) {
+            const { data: row, error: e1 } = await client.from('docs').select('data').eq('col', col).eq('id', id).maybeSingle();
+            if (e1) fail(e1); if (!row) fail({ message: 'row-level' });
+            const { error } = await client.from('docs').update({ data: { ...row.data, ...patch } }).eq('col', col).eq('id', id).select('id').single();
+            if (error) fail(error); },
+          async delete() { const { error, count } = await client.from('docs').delete({ count: 'exact' }).eq('col', col).eq('id', id); if (error) fail(error); if (!count) fail({ message: 'row-level' }); },
+        }; },
+        onSnapshot(next, onErr) {
+          let alive = true, t = null;
+          const load = async () => {
+            const { data, error } = await client.from('docs').select('id,data').eq('col', col);
+            if (!alive) return; if (error) { onErr && onErr(error); return; }
+            next({ docs: data.map(r => ({ id: r.id, data: () => r.data })), metadata: { fromCache: false } });
+          };
+          const soon = () => { clearTimeout(t); t = setTimeout(load, 250); };
+          const vis = () => { if (!document.hidden) load(); };
+          load();
+          const ch = client.channel('docs-' + col + '-' + Math.random().toString(36).slice(2))
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'docs', filter: 'col=eq.' + col }, soon).subscribe();
+          const poll = setInterval(load, 30000);
+          document.addEventListener('visibilitychange', vis);
+          return () => { alive = false; clearInterval(poll); document.removeEventListener('visibilitychange', vis); client.removeChannel(ch); };
+        },
+      };
+    },
+  };
+}
+async function login(nome, senha) {
+  const test = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { global: { headers: { 'x-senha': senha } }, auth: { persistSession: false } });
+  const { data, error } = await test.rpc('senha_ok');
+  if (error) return 'Não deu para conferir a senha agora. Confira a internet.';
+  if (data !== true) return 'Senha errada. Confira com a coordenação.';
+  store.set('senha', senha); store.set('nome', nome);
+  S.uid = nome; S.canWrite = true;
+  (S.unsubs || []).forEach(u => u());
+  S.db = makeDb(senha); subscribeAll();
+  return null;
+}
+function loginHTML() {
+  return `<form class="note" id="loginForm" style="color:var(--ink)"><b>Para editar, entre com a senha da equipe.</b>
+    <div class="metaform" style="margin:10px 0 0">
+      <label>Seu nome<input id="lNome" value="${esc(store.get('nome', ''))}" autocomplete="name" required></label>
+      <label>Senha da equipe<input id="lSenha" type="password" autocomplete="current-password" required></label>
+    </div>
+    <div class="confirm"><span class="status" id="lMsg"></span><span class="grow"></span><button type="button" class="ghost" id="lCancel">Cancelar</button><button class="primary" id="lOk">Entrar</button></div></form>`;
+}
+const needLogin = () => !store.get('senha', '');
+document.addEventListener('submit', async ev => {
+  if (ev.target.id !== 'loginForm') return;
+  ev.preventDefault();
+  const nome = $('#lNome').value.trim(), senha = $('#lSenha').value;
+  if (!nome) { $('#lMsg').textContent = 'Escreva seu nome.'; return; }
+  $('#lMsg').textContent = 'Conferindo…';
+  const err = await login(nome, senha);
+  if (err) { $('#lMsg').textContent = err; return; }
+  const next = S.login; S.login = null;
+  if (next === 'new') newSong(); else if (S.cur) startEdit(); else render();
+});
+S.day = store.get('day', 'todas');
+{ const m = location.hash.match(/^#m-(.+)$/); if (m) S.cur = m[1]; }
+render();
+
+let loadTimer = null;
+function subscribeAll() {
+  const db = S.db;
+  S.unsubs = [db.collection('songs').onSnapshot(snap => {
+    S.songs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (!snap.metadata.fromCache || S.songs.length) { S.loaded = true; clearTimeout(loadTimer); }
+    if (S.edit && S.cur) { const b = S.songs.find(s => s.id === S.cur); if (b && (b.at || 0) !== S.edit.baseAt && b.by !== S.uid) S.edit.remote = true; }
+    resolveNames(S.songs.map(s => s.by).filter(Boolean));
+    if (S.edit && S.textMode) { const ta = $('#src'); if (ta) S.edit.text = ta.value; readMeta(); }
+    if (S.sheet) { const i = $('#chIn'); if (i) S.sheet.val = i.value; }
+    if (!(S.edit && S.textMode && document.activeElement && document.activeElement.id === 'src')) render(); else renderSaveBar();
+  }, err => { clearTimeout(loadTimer); if (!S.loaded) { S.loaded = true; main.innerHTML = `<div class="note"><b>Não deu para carregar as músicas.</b><br>Confira a internet e abra o link de novo.</div>`; } }),
+  db.collection('trash').onSnapshot(snap => { S.trash = snap.docs.map(d => ({ id: d.id, ...d.data() })); if (!S.cur && !S.login) renderList(); }, () => {})];
+}
+(async () => {
+  if (!window.supabase || /COLE_AQUI/.test(SUPABASE_URL)) { main.innerHTML = `<div class="note"><b>O hinário ainda não foi conectado ao banco de dados.</b><br>Assim que a configuração do Supabase for colocada, as músicas aparecem aqui.</div>`; return; }
+  S.db = makeDb(store.get('senha', ''));
+  S.uid = store.get('nome', '') || null;
+  loadTimer = setTimeout(() => { if (!S.loaded) main.innerHTML = `<div class="note"><b>As músicas estão demorando para chegar.</b><br>Confira a internet. Elas aparecem sozinhas assim que a conexão voltar.</div>`; }, 10000);
+  subscribeAll();
+})();
+})();
+</script>
+</body>
+</html>
