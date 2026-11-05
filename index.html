@@ -583,7 +583,7 @@ document.addEventListener('input', ev => {
 document.addEventListener('keydown', ev => { if (ev.key === 'Enter' && ev.target.id === 'chIn') applySheet(false); if (ev.key === 'Escape' && S.sheet) { S.sheet = null; render(); } });
 window.addEventListener('hashchange', () => { const m = location.hash.match(/^#m-(.+)$/); if (!S.edit) { S.cur = m ? m[1] : null; render(); } });
 
-/* ---------- dados (Supabase: tabela docs(col, id, data)) ---------- */
+/* ---------- dados (Supabase: tabela hinario_docs(col, id, data)) ---------- */
 let client = null;
 function makeDb(senha) {
   client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
@@ -593,18 +593,18 @@ function makeDb(senha) {
     collection(col) {
       return {
         doc(id) { return {
-          async set(data) { const { error } = await client.from('docs').upsert({ col, id, data }); if (error) fail(error); },
+          async set(data) { const { error } = await client.from('hinario_docs').upsert({ col, id, data }); if (error) fail(error); },
           async update(patch) {
-            const { data: row, error: e1 } = await client.from('docs').select('data').eq('col', col).eq('id', id).maybeSingle();
+            const { data: row, error: e1 } = await client.from('hinario_docs').select('data').eq('col', col).eq('id', id).maybeSingle();
             if (e1) fail(e1); if (!row) fail({ message: 'row-level' });
-            const { error } = await client.from('docs').update({ data: { ...row.data, ...patch } }).eq('col', col).eq('id', id).select('id').single();
+            const { error } = await client.from('hinario_docs').update({ data: { ...row.data, ...patch } }).eq('col', col).eq('id', id).select('id').single();
             if (error) fail(error); },
-          async delete() { const { error, count } = await client.from('docs').delete({ count: 'exact' }).eq('col', col).eq('id', id); if (error) fail(error); if (!count) fail({ message: 'row-level' }); },
+          async delete() { const { error, count } = await client.from('hinario_docs').delete({ count: 'exact' }).eq('col', col).eq('id', id); if (error) fail(error); if (!count) fail({ message: 'row-level' }); },
         }; },
         onSnapshot(next, onErr) {
           let alive = true, t = null;
           const load = async () => {
-            const { data, error } = await client.from('docs').select('id,data').eq('col', col);
+            const { data, error } = await client.from('hinario_docs').select('id,data').eq('col', col);
             if (!alive) return; if (error) { onErr && onErr(error); return; }
             next({ docs: data.map(r => ({ id: r.id, data: () => r.data })), metadata: { fromCache: false } });
           };
@@ -612,7 +612,7 @@ function makeDb(senha) {
           const vis = () => { if (!document.hidden) load(); };
           load();
           const ch = client.channel('docs-' + col + '-' + Math.random().toString(36).slice(2))
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'docs', filter: 'col=eq.' + col }, soon).subscribe();
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'hinario_docs', filter: 'col=eq.' + col }, soon).subscribe();
           const poll = setInterval(load, 30000);
           document.addEventListener('visibilitychange', vis);
           return () => { alive = false; clearInterval(poll); document.removeEventListener('visibilitychange', vis); client.removeChannel(ch); };
@@ -623,7 +623,7 @@ function makeDb(senha) {
 }
 async function login(nome, senha) {
   const test = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { global: { headers: { 'x-senha': senha } }, auth: { persistSession: false } });
-  const { data, error } = await test.rpc('senha_ok');
+  const { data, error } = await test.rpc('hinario_senha_ok');
   if (error) return 'Não deu para conferir a senha agora. Confira a internet.';
   if (data !== true) return 'Senha errada. Confira com a coordenação.';
   store.set('senha', senha); store.set('nome', nome);
