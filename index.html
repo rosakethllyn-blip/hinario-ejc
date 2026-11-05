@@ -117,6 +117,10 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .selbar button{flex:1;height:44px;border:1px solid var(--line);border-radius:10px;background:var(--paper);font-size:18px;max-width:72px}
 .selbar button.perigo{color:#C62828}
 .selbar button.ok{background:var(--chord);border-color:var(--chord);color:var(--paper);font-size:15px;font-weight:700;flex:0 0 auto;padding:0 18px;max-width:none}
+.player{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 10px;margin-top:10px}
+.player-lbl{font-weight:700;color:var(--wine);font-size:14px;white-space:nowrap}
+.player audio{flex:1;min-width:0;height:40px}
+.tag.au{color:var(--chord)}
 .tag.ed{color:var(--wine);border-color:var(--wine-soft);background:var(--wine-soft)}
 .editing .cl.k{cursor:pointer;background:var(--wine-soft);border-radius:4px;padding:0 .3em;margin-right:.15em}
 .editing .k{cursor:pointer;border-radius:3px}
@@ -207,6 +211,7 @@ textarea.src{width:100%;min-height:55vh;border:1px solid var(--line);border-radi
   </div>
 </header>
 
+<div class="wrap" id="audioHost"></div>
 <main class="wrap" id="main">
   <div class="note" id="loading"><b>Carregando as músicas…</b><br>Elas ficam salvas online e aparecem iguais para todo mundo.</div>
 </main>
@@ -375,7 +380,7 @@ function renderList() {
       if (s.group && s.group !== lastG) html += `<li class="grp">${esc(s.group)}</li>`;
       lastG = s.group;
       const hasCh = s.st.some(st => st.some(p => (p.c || []).length || (p.pre || []).length));
-      html += `<li><button class="row" data-open="${esc(s.id)}"><span class="num">${numOf(s.id)}</span><span class="t">${esc(s.title)}</span>${s.at ? '<span class="tag ed">editada</span>' : ''}${hasCh ? '<span class="tag">cifra</span>' : ''}</button></li>`;
+      html += `<li><button class="row" data-open="${esc(s.id)}"><span class="num">${numOf(s.id)}</span><span class="t">${esc(s.title)}</span>${AUDIO[s.id] ? '<span class="tag au">♪ áudio</span>' : ''}${s.at ? '<span class="tag ed">editada</span>' : ''}${hasCh ? '<span class="tag">cifra</span>' : ''}</button></li>`;
     }
     html += '</ul>';
   }
@@ -538,8 +543,22 @@ function loadOriginal() {
   S.selc = null; markDirty(); S.msg = 'Cifra original carregada. Toque em ✓ Salvar para confirmar.'; render();
 }
 function renderSheet() { $('#sheetHost').innerHTML = ''; }
+let AUDIO = {};
+fetch('audio/lista.json?v=' + Date.now()).then(r => r.ok ? r.json() : {}).then(j => { AUDIO = j || {}; render(); }).catch(() => {});
+function syncAudio() {
+  const host = $('#audioHost');
+  const src = (S.cur && !S.edit && AUDIO[S.cur]) || '';
+  if (host.dataset.src === src) return;
+  host.dataset.src = src;
+  if (!src) { host.innerHTML = ''; return; }
+  const song = S.songs.find(s => s.id === S.cur);
+  host.innerHTML = `<div class="player"><span class="player-lbl">▶ Ouvir</span><audio controls preload="none" src="${esc(src)}"></audio></div>`;
+  const au = host.querySelector('audio');
+  au.addEventListener('play', () => { try { if ('mediaSession' in navigator && song) navigator.mediaSession.metadata = new MediaMetadata({ title: song.title, artist: 'Hinário EJC 2026', artwork: [{ src: 'icon-512.png', sizes: '512x512', type: 'image/png' }] }); } catch {} });
+}
 function render() {
   if (S.cur) renderSong(); else renderList();
+  syncAudio();
   renderSheet();
   $('#chordToggle').setAttribute('aria-pressed', String(showChords));
   $('#chordToggle').classList.toggle('on', showChords);
