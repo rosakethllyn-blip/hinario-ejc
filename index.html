@@ -149,7 +149,40 @@ textarea.src{width:100%;min-height:55vh;border:1px solid var(--line);border-radi
 .sheetrow .grow{flex:1}
 .lbl{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:4px 0 6px}
 .confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;font-size:14px}
-@media (max-width:420px){.metaform{grid-template-columns:1fr}.stitle{font-size:26px}}
+.songfoot{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;border-top:1px solid var(--line);margin-top:18px;padding-top:12px}
+.songfoot .legend{margin:0}
+.linkbtn{background:none;border:0;color:var(--wine);font-weight:600;text-decoration:underline;padding:6px 0}
+.songnav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);border-top:1px solid var(--line);padding-top:6px;padding-bottom:calc(6px + env(safe-area-inset-bottom,0px))}
+.songnav .wrap{display:flex;align-items:center;gap:8px}
+.navbtn{flex:1;height:44px;border:1px solid var(--line);border-radius:10px;background:var(--paper);font-weight:700;font-size:15px;color:var(--ink)}
+.navpos{flex:0 0 auto;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;text-align:center;min-width:84px}
+.songtools{flex-wrap:nowrap}
+.editbtn{white-space:nowrap}
+@media (max-width:600px){
+  .bar{padding-block:6px}
+  .brand{font-size:19px}
+  .brand small{font-size:10px}
+  .iconbtn{min-width:38px;height:38px;padding:0 8px}
+  .kicker{margin-top:10px;font-size:10px}
+  .stitle{font-size:24px;margin:2px 0 2px}
+  .stitle .n{font-size:15px}
+  .meta{font-size:12px;margin-bottom:6px}
+  .songtools{gap:6px;margin:6px 0 12px}
+  .songtools .tom{height:38px}
+  .songtools .tom button{width:34px;height:36px}
+  .songtools .tom output{min-width:34px;font-size:12px}
+  .songtools .editbtn{height:38px;padding:0 14px;margin-left:auto;font-size:17px}
+  .songtools .lbl-long{display:none}
+  .lyrics{font-size:var(--fs)}
+  .p{line-height:1.55}
+  .p.hasch{line-height:1.35;margin-bottom:.8em}
+  .stanza{margin-bottom:1.3em}
+  .songfoot .legend{font-size:12px;gap:4px 10px}
+  .metaform{grid-template-columns:1fr}
+  .savebar .wrap{gap:6px}
+  .savebar .primary,.savebar .ghost{height:40px;padding:0 12px}
+  .savebar .status{flex-basis:100%;order:9;font-size:12px}
+}
 @media (prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(30px);opacity:.6}}}
 </style>
 </head>
@@ -368,14 +401,13 @@ function renderSong() {
 
   if (!editing && S.login) html += loginHTML();
   if (!editing) {
-    html += `<div class="tools">
-      <div class="tom" role="group" aria-label="Tom"><button data-tom="-1" aria-label="Meio tom abaixo">−</button><output>${k ? (k > 0 ? '+' : '') + k + ' st' : 'Tom'}</output><button data-tom="1" aria-label="Meio tom acima">+</button></div>
+    html += `<div class="tools songtools">
+      <div class="tom" role="group" aria-label="Tom"><button data-tom="-1" aria-label="Meio tom abaixo">−</button><output>${k ? (k > 0 ? '+' : '') + k : 'Tom'}</output><button data-tom="1" aria-label="Meio tom acima">+</button></div>
       <button class="iconbtn" data-fs="-1" aria-label="Letra menor">A−</button><button class="iconbtn" data-fs="1" aria-label="Letra maior">A+</button>
-      ${S.canWrite !== false ? '<button class="primary" id="startEdit" title="Editar cifra">✎ Editar</button>' : ''}
-      ${(base.hist || []).length && S.canWrite !== false ? '<button class="ghost" id="showHist">Versões anteriores</button>' : ''}
+      ${S.canWrite !== false ? '<button class="primary editbtn" id="startEdit" title="Editar cifra" aria-label="Editar cifra">✎<span class="lbl-long"> Editar</span></button>' : ''}
     </div>`;
-    html += legendHTML();
     html += `<div class="lyrics${showChords ? '' : ' nochords'}">${lyricsHTML(song, k, false)}</div>`;
+    html += `<div class="songfoot">${legendHTML()}${(base.hist || []).length && S.canWrite !== false ? '<button class="linkbtn" id="showHist">Versões anteriores</button>' : ''}</div>`;
     if (S.showHist) html += histHTML(base);
   } else {
     const e = S.edit;
@@ -417,7 +449,16 @@ function histHTML(base) {
 }
 function renderSaveBar() {
   const host = $('#savebarHost');
-  if (!S.edit) { host.innerHTML = ''; return; }
+  if (!S.edit) {
+    const base = S.cur && S.songs.find(s => s.id === S.cur);
+    if (!base) { host.innerHTML = ''; return; }
+    const doDia = ordered().filter(s => s.day === base.day);
+    host.innerHTML = `<nav class="songnav" aria-label="Navegar entre músicas"><div class="wrap">
+      <button class="navbtn" data-nav="-1" aria-label="Música anterior">‹ Anterior</button>
+      <span class="navpos">${esc(DAYNAME[base.day] || '')} · ${doDia.findIndex(s => s.id === base.id) + 1}/${doDia.length}</span>
+      <button class="navbtn" data-nav="1" aria-label="Próxima música">Próxima ›</button></div></nav>`;
+    return;
+  }
   const sel = S.selc && !S.textMode;
   host.innerHTML = `${sel ? `<div class="selbar"><div class="wrap">
       <span class="sel-label">Nota:</span>
@@ -429,6 +470,12 @@ function renderSaveBar() {
     <button class="ghost" id="cancelEdit">Cancelar</button>
     <button class="ghost" id="origEdit" title="Voltar à cifra original do hinário">↻ Original</button>
     <span class="status grow${S.msg === 'Salvo para todos' ? ' ok' : ''}" id="status">${esc(S.msg || (S.edit.dirty ? 'Alterações ainda não salvas' : ''))}</span></div></div>`;
+}
+function goSong(d) {
+  const all = ordered(); if (!all.length || !S.cur) return;
+  const i = all.findIndex(s => s.id === S.cur);
+  const next = all[(i + d + all.length) % all.length];
+  S.cur = next.id; S.showHist = false; location.hash = 'm-' + next.id; window.scrollTo(0, 0); render();
 }
 function curPara() { const s = S.selc; return s && S.edit ? S.edit.draft.st[s.s][s.p] : null; }
 function paraLen(p) { return p.r.reduce((n, r) => n + r.t.length, 0); }
@@ -606,6 +653,7 @@ document.addEventListener('click', ev => {
   if (t.id === 'chordToggle') { showChords = !showChords; store.set('chords', showChords); return render(); }
   if (t.dataset.tom) { const k = (store.get('tom.' + S.cur, 0) + +t.dataset.tom + 18) % 12 - 6; store.set('tom.' + S.cur, k); return render(); }
   if (t.dataset.fs) { fontSize = Math.min(28, Math.max(14, fontSize + 2 * t.dataset.fs)); store.set('fs', fontSize); document.documentElement.style.setProperty('--fs', fontSize + 'px'); return; }
+  if (t.dataset.nav) return goSong(+t.dataset.nav);
   if (t.id === 'startEdit') { if (needLogin()) { S.login = 'edit'; return render(); } return startEdit(); }
   if (t.id === 'lCancel') { S.login = null; return render(); }
   if (t.id === 'showHist') { S.showHist = !S.showHist; return render(); }
@@ -676,6 +724,18 @@ document.addEventListener('keydown', ev => {
   else if (k === 'Escape' && S.selc) { S.selc = null; render(); }
 });
 document.addEventListener('toggle', ev => { if (ev.target.id === 'more') S.moreOpen = ev.target.open; }, true);
+let touch0 = null;
+document.addEventListener('touchstart', ev => {
+  if (!S.cur || S.edit || ev.touches.length !== 1) { touch0 = null; return; }
+  touch0 = { x: ev.touches[0].clientX, y: ev.touches[0].clientY, t: Date.now() };
+}, { passive: true });
+document.addEventListener('touchend', ev => {
+  if (!touch0 || !S.cur || S.edit) return;
+  const e = ev.changedTouches[0], dx = e.clientX - touch0.x, dy = e.clientY - touch0.y;
+  const ok = Math.abs(dx) > 80 && Math.abs(dy) < 60 && Date.now() - touch0.t < 600;
+  touch0 = null;
+  if (ok) goSong(dx < 0 ? 1 : -1);
+}, { passive: true });
 window.addEventListener('hashchange', () => { const m = location.hash.match(/^#m-(.+)$/); if (!S.edit) { S.cur = m ? m[1] : null; render(); } });
 
 /* ---------- dados (Supabase: tabela hinario_docs(col, id, data)) ---------- */
