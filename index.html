@@ -65,7 +65,7 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .trash li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
 
 /* música */
-.song{padding-bottom:140px}
+.song{padding-bottom:200px}
 .kicker{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:18px}
 .stitle{font-family:var(--display);font-weight:500;color:var(--wine);font-size:30px;line-height:1.15;margin:2px 0 4px;text-wrap:balance}
 .stitle .n{font-family:var(--body);font-weight:700;font-size:18px;margin-right:8px}
@@ -96,6 +96,23 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 
 /* edição */
 .editing .p{line-height:1.6}
+.editing .p .cl0{min-height:1.6em;display:block}
+.pill{font-family:var(--mono);font-weight:700;font-size:.82em;color:var(--chord);background:var(--card);border:1.5px solid var(--chord);border-radius:7px;padding:1px 6px;margin:0 3px 3px 0;line-height:1.25;min-width:1.8em;cursor:pointer}
+.pill.sel{background:var(--chord);color:var(--paper)}
+.pill-input{font-family:var(--mono);font-weight:700;font-size:.82em;color:var(--chord);background:var(--paper);border:2px solid var(--chord);border-radius:7px;padding:1px 4px;margin:0 3px 3px 0;line-height:1.25;width:auto;outline:none}
+.editing .k{cursor:text;border-bottom:1px dotted transparent}
+.editing .k:hover{border-bottom-color:var(--muted);background:none}
+.ebhint{font-size:13px;color:var(--muted);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin-bottom:14px}
+.ebhint b{color:var(--ink)}
+.more{margin-top:22px;border-top:1px solid var(--line);padding-top:12px}
+.more summary{cursor:pointer;font-weight:600;color:var(--muted);margin-bottom:10px}
+.selbar{position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:7;padding-block:8px;background:var(--card);border-top:1px solid var(--line);box-shadow:0 -6px 18px rgba(0,0,0,.08)}
+.selbar .wrap{display:flex;gap:8px;align-items:center}
+.selbar .sel-label{font-size:13px;color:var(--muted);font-weight:700}
+.selbar button{flex:1;height:44px;border:1px solid var(--line);border-radius:10px;background:var(--paper);font-size:18px;max-width:72px}
+.selbar button.perigo{color:#C62828}
+.selbar button.ok{background:var(--chord);border-color:var(--chord);color:var(--paper);font-size:15px;font-weight:700;flex:0 0 auto;padding:0 18px;max-width:none}
+.tag.ed{color:var(--wine);border-color:var(--wine-soft);background:var(--wine-soft)}
 .editing .cl.k{cursor:pointer;background:var(--wine-soft);border-radius:4px;padding:0 .3em;margin-right:.15em}
 .editing .k{cursor:pointer;border-radius:3px}
 .editing .k:hover{background:var(--wine-soft)}
@@ -241,40 +258,47 @@ function textToSong(text) {
 }
 
 /* ---------- render ---------- */
-function paraHTML(p, si, pi, k, edit, sel) {
-  const ch = {};
-  (p.c || []).forEach(([o, c]) => (ch[o] = (ch[o] ? ch[o] + ' ' : '') + trChord(c, k)));
+function paraHTML(p, si, pi, k, edit, selCi) {
+  const ch = {}, ids = {};
+  (p.c || []).forEach(([o, c], ci) => { ch[o] = (ch[o] ? ch[o] + ' ' : '') + trChord(c, k); (ids[o] = ids[o] || []).push(ci); });
   const chars = []; p.r.forEach(r => { for (const c of r.t) chars.push({ c, v: r.v }); });
   const N = chars.length;
-  const one = i => { const c = chars[i].c, e = c === ' ' ? (ch[i] ? '&nbsp;' : ' ') : esc(c);
-    return edit ? `<span class="k${sel === i ? ' sel' : ''}" data-o="${i}">${e}</span>` : e; };
+  const has = a => ch[a] != null;
+  const one = i => { const c = chars[i].c, e = c === ' ' ? (has(i) ? '&nbsp;' : ' ') : esc(c);
+    return edit ? `<span class="k" data-o="${i}">${e}</span>` : e; };
   const run = (a, b) => { let s = '', i = a;
     while (i < b) { const v = chars[i].v; let t = ''; while (i < b && chars[i].v === v) { t += one(i); i++; } s += `<span class="v-${v}">${t}</span>`; }
     return s; };
-  const label = a => !ch[a] ? '<span class="cl cl0">&#8203;</span>' : `<span class="cl${edit ? ' k' : ''}"${edit ? ` data-o="${a}"` : ''}>${esc(ch[a])}</span>`;
+  const label = a => {
+    if (!has(a)) return '<span class="cl cl0">&#8203;</span>';
+    if (!edit) return `<span class="cl">${esc(ch[a])}</span>`;
+    return `<span class="cl">${ids[a].map(ci => `<button type="button" class="pill${selCi === ci ? ' sel' : ''}" data-ci="${ci}">${esc(p.c[ci][1]) || '?'}</button>`).join('')}</span>`;
+  };
   let out = '', i = 0;
   while (i < N) {
-    if (chars[i].c === ' ' && !ch[i]) { out += run(i, i + 1); i++; continue; }
+    if (chars[i].c === ' ' && !has(i)) { out += run(i, i + 1); i++; continue; }
     let j = i + 1;
     if (chars[i].c !== ' ') while (j < N && chars[j].c !== ' ') j++;
-    const cuts = []; for (let x = i; x < j; x++) if (ch[x] && x !== i) cuts.push(x);
-    if (!ch[i] && !cuts.length) { out += run(i, j); i = j; continue; }
+    const cuts = []; for (let x = i + 1; x < j; x++) if (has(x)) cuts.push(x);
+    if (!has(i) && !cuts.length) { out += run(i, j); i = j; continue; }
     const b = [i, ...cuts, j]; let w = '';
     for (let n = 0; n < b.length - 1; n++) w += `<span class="cw">${label(b[n])}<span class="ct">${run(b[n], b[n + 1])}</span></span>`;
     out += `<span class="wd">${w}</span>`; i = j;
   }
   const late = Object.keys(ch).map(Number).filter(o => o >= N);
   if (late.length || edit) {
-    const inner = edit ? `<span class="k${sel === N ? ' sel' : ''}" data-o="${N}">&nbsp;&nbsp;</span>` : '&nbsp;';
-    if (late.length) { ch[N] = late.map(o => ch[o]).join(' '); out += `<span class="wd"><span class="cw">${label(N)}<span class="ct">${inner}</span></span></span>`; }
-    else out += inner;
+    const inner = edit ? `<span class="k" data-o="${N}">&nbsp;&nbsp;</span>` : '&nbsp;';
+    if (late.length) {
+      ch[N] = late.map(o => ch[o]).join(' '); ids[N] = late.flatMap(o => ids[o]);
+      out += `<span class="wd"><span class="cw">${label(N)}<span class="ct">${inner}</span></span></span>`;
+    } else out += inner;
   }
   const pre = (p.pre || []).map(l => `<div class="pre">${esc(trLine(l, k))}</div>`).join('');
-  return `${pre}<p class="p${(p.c || []).length ? ' hasch' : ''}" data-s="${si}" data-p="${pi}">${out}</p>`;
+  return `${pre}<p class="p${(p.c || []).length || edit ? ' hasch' : ''}" data-s="${si}" data-p="${pi}">${out}</p>`;
 }
 function lyricsHTML(song, k, edit, sel) {
   return song.st.map((st, si) => `<div class="stanza">${st.map((p, pi) =>
-    paraHTML(p, si, pi, k, edit, sel && sel.s === si && sel.p === pi ? sel.o : null)).join('')}</div>`).join('')
+    paraHTML(p, si, pi, k, edit, sel && sel.s === si && sel.p === pi ? sel.ci : null)).join('')}</div>`).join('')
     + (song.tail || []).map(l => `<div class="pre">${esc(trLine(l, k))}</div>`).join('');
 }
 const ordered = () => [...S.songs].sort((a, b) => a.n - b.n || a.id.localeCompare(b.id));
@@ -313,7 +337,7 @@ function renderList() {
       if (s.group && s.group !== lastG) html += `<li class="grp">${esc(s.group)}</li>`;
       lastG = s.group;
       const hasCh = s.st.some(st => st.some(p => (p.c || []).length || (p.pre || []).length));
-      html += `<li><button class="row" data-open="${esc(s.id)}"><span class="num">${numOf(s.id)}</span><span class="t">${esc(s.title)}</span>${hasCh ? '<span class="tag">cifra</span>' : ''}</button></li>`;
+      html += `<li><button class="row" data-open="${esc(s.id)}"><span class="num">${numOf(s.id)}</span><span class="t">${esc(s.title)}</span>${s.at ? '<span class="tag ed">editada</span>' : ''}${hasCh ? '<span class="tag">cifra</span>' : ''}</button></li>`;
     }
     html += '</ul>';
   }
@@ -332,6 +356,7 @@ function renderList() {
 
 function renderSong() {
   const base = S.songs.find(s => s.id === S.cur);
+  if (!base && !S.loaded) { $('#listControls').hidden = true; return; }
   if (!base) { S.cur = null; S.edit = null; return renderList(); }
   $('#back').hidden = false; $('#listControls').hidden = true; $('#brand').innerHTML = '<small>Hinário EJC 2026</small>' + esc(DAYNAME[base.day] || '');
   const editing = !!S.edit, song = editing ? S.edit.draft : base;
@@ -346,7 +371,7 @@ function renderSong() {
     html += `<div class="tools">
       <div class="tom" role="group" aria-label="Tom"><button data-tom="-1" aria-label="Meio tom abaixo">−</button><output>${k ? (k > 0 ? '+' : '') + k + ' st' : 'Tom'}</output><button data-tom="1" aria-label="Meio tom acima">+</button></div>
       <button class="iconbtn" data-fs="-1" aria-label="Letra menor">A−</button><button class="iconbtn" data-fs="1" aria-label="Letra maior">A+</button>
-      ${S.canWrite !== false ? '<button class="primary" id="startEdit">Editar</button>' : ''}
+      ${S.canWrite !== false ? '<button class="primary" id="startEdit" title="Editar cifra">✎ Editar</button>' : ''}
       ${(base.hist || []).length && S.canWrite !== false ? '<button class="ghost" id="showHist">Versões anteriores</button>' : ''}
     </div>`;
     html += legendHTML();
@@ -355,17 +380,9 @@ function renderSong() {
   } else {
     const e = S.edit;
     if (e.remote) html += `<div class="editbanner warn"><b>${esc(nameOf(base.by))}</b> salvou esta música enquanto você editava. Se você salvar, a versão dele é substituída (ela fica em “Versões anteriores”).</div>`;
-    html += `<div class="metaform">
-      <label class="full">Título<input id="fTitle" value="${esc(song.title)}"></label>
-      <label>Dia<select id="fDay">${DAYS.map(d => `<option value="${d[0]}"${song.day === d[0] ? ' selected' : ''}>${d[1]}</option>`).join('')}</select></label>
-      <label>Grupo (opcional)<input id="fGroup" list="groups" value="${esc(song.group || '')}" placeholder="Ex.: Trânsito"></label>
-    </div><datalist id="groups">${[...new Set(S.songs.map(s => s.group).filter(Boolean))].map(g => `<option value="${esc(g)}">`).join('')}</datalist>`;
-    html += `<div class="tools"><button class="iconbtn${!S.textMode ? ' on' : ''}" id="modeTap">Acordes</button><button class="iconbtn${S.textMode ? ' on' : ''}" id="modeText">Letra e marcações</button>
-      <button class="ghost" id="moveUp" title="Subir na ordem">↑</button><button class="ghost" id="moveDown" title="Descer na ordem">↓</button></div>`;
+    html += `<div class="ebhint"><b>1 toque</b> na nota seleciona (mover ◀ ▶, trocar ✎, apagar 🗑) · <b>2 toques</b> na nota para editar ali mesmo · toque na <b>letra</b> para adicionar uma nota · no computador: setas <b>← →</b> movem, <b>↑ ↓</b> trocam de nota</div>`;
     if (!S.textMode) {
-      html += `<div class="editbanner">Toque na <b>letra</b> onde o acorde deve ficar. Toque numa letra que já tem acorde para trocar, mover com ◀ ▶ ou remover.</div>`;
-      html += legendHTML();
-      html += `<div class="lyrics editing">${lyricsHTML(song, 0, true, S.sheet && { s: S.sheet.s, p: S.sheet.p, o: S.sheet.o })}</div>`;
+      html += `<div class="lyrics editing">${lyricsHTML(song, 0, true, S.selc)}</div>`;
     } else {
       html += `<div class="mk" role="group" aria-label="Marcações">
         <button data-wrap="*|*"><b>Todos</b></button><button data-wrap="{|}"><span class="sw" style="background:var(--men)"></span>Homens</button>
@@ -373,9 +390,17 @@ function renderSong() {
       html += `<textarea class="src" id="src" spellcheck="false">${esc(e.text)}</textarea>`;
       html += `<p class="help">Selecione um trecho e toque numa marcação. <code>*texto*</code> todos · <code>{texto}</code> homens · sem marca mulheres · <code>&lt;texto&gt;</code> instrução · <code>[G]</code> acorde antes da sílaba · linha começando com <code>&gt; </code> só cifra (ex.: introdução) · linha em branco separa estrofes.</p>`;
     }
+    html += `<details class="more"${S.moreOpen ? ' open' : ''} id="more"><summary>Mais opções: título, dia, letra, ordem</summary>
+      <div class="metaform">
+        <label class="full">Título<input id="fTitle" value="${esc(song.title)}"></label>
+        <label>Dia<select id="fDay">${DAYS.map(d => `<option value="${d[0]}"${song.day === d[0] ? ' selected' : ''}>${d[1]}</option>`).join('')}</select></label>
+        <label>Grupo (opcional)<input id="fGroup" list="groups" value="${esc(song.group || '')}" placeholder="Ex.: Trânsito"></label>
+      </div><datalist id="groups">${[...new Set(S.songs.map(s => s.group).filter(Boolean))].map(g => `<option value="${esc(g)}">`).join('')}</datalist>
+      <div class="tools"><button class="iconbtn${S.textMode ? ' on' : ''}" id="modeText">${S.textMode ? 'Voltar para as notas' : 'Editar letra e vozes'}</button>
+        <button class="ghost" id="moveUp" title="Subir na ordem">↑ Subir</button><button class="ghost" id="moveDown" title="Descer na ordem">↓ Descer</button></div>`;
     html += `<div class="confirm" id="delZone">${S.edit.confirmDel
       ? `<span>Mandar “${esc(song.title)}” para a lixeira?</span><button class="ghost danger" id="delYes">Sim, apagar</button><button class="ghost" id="delNo">Não</button>`
-      : `<button class="ghost danger" id="delSong">Apagar música</button>`}</div>`;
+      : `<button class="ghost danger" id="delSong">Apagar música</button>`}</div></details>`;
   }
   html += `</article>`;
   main.innerHTML = html;
@@ -393,31 +418,74 @@ function histHTML(base) {
 function renderSaveBar() {
   const host = $('#savebarHost');
   if (!S.edit) { host.innerHTML = ''; return; }
-  host.innerHTML = `<div class="savebar"><div class="wrap">
-    <span class="status grow${S.msg === 'Salvo para todos' ? ' ok' : ''}" id="status">${esc(S.msg || (S.edit.dirty ? 'Alterações ainda não salvas' : 'Nenhuma alteração'))}</span>
+  const sel = S.selc && !S.textMode;
+  host.innerHTML = `${sel ? `<div class="selbar"><div class="wrap">
+      <span class="sel-label">Nota:</span>
+      <button id="selL" title="Mover para a esquerda">◀</button><button id="selR" title="Mover para a direita">▶</button>
+      <button id="selEd" title="Trocar acorde">✎</button><button id="selDel" class="perigo" title="Apagar nota">🗑</button>
+      <button id="selOk" class="ok">OK</button></div></div>` : ''}
+    <div class="savebar"><div class="wrap">
+    <button class="primary" id="saveEdit"${S.saving ? ' disabled' : ''}>${S.saving ? 'Salvando…' : '✓ Salvar'}</button>
     <button class="ghost" id="cancelEdit">Cancelar</button>
-    <button class="primary" id="saveEdit"${S.saving ? ' disabled' : ''}>${S.saving ? 'Salvando…' : 'Salvar para todos'}</button></div></div>`;
+    <button class="ghost" id="origEdit" title="Voltar à cifra original do hinário">↻ Original</button>
+    <span class="status grow${S.msg === 'Salvo para todos' ? ' ok' : ''}" id="status">${esc(S.msg || (S.edit.dirty ? 'Alterações ainda não salvas' : ''))}</span></div></div>`;
 }
-
-function renderSheet() {
-  const host = $('#sheetHost');
-  const sh = S.sheet;
-  if (!sh || !S.edit) { host.innerHTML = ''; return; }
-  const p = S.edit.draft.st[sh.s][sh.p];
-  const text = p.r.map(r => r.t).join('');
-  const a = Math.max(0, sh.o - 18), b = Math.min(text.length, sh.o + 18);
-  const ctx = esc(text.slice(a, sh.o)) + '<b>' + (esc(text[sh.o] || ' ') ) + '</b>' + esc(text.slice(sh.o + 1, b));
-  host.innerHTML = `<div class="sheet" role="dialog" aria-label="Acorde"><div class="wrap">
-    <h3>${sh.had ? 'Acorde nesta posição' : 'Novo acorde'}</h3>
-    <div class="ctx">${a > 0 ? '…' : ''}${ctx}${b < text.length ? '…' : ''}</div>
-    <div class="chordval"><button class="iconbtn" data-nudge="-1" aria-label="Mover para a esquerda">◀</button><input id="chIn" value="${esc(sh.val)}" placeholder="ex.: Am7" autocomplete="off" autocapitalize="off"><button class="iconbtn" data-nudge="1" aria-label="Mover para a direita">▶</button></div>
-    <div class="lbl">Nota</div>
-    <div class="grid">${['C','C#','D','Eb','E','F','F#','G','G#','A','Bb','B'].map(r => `<button data-root="${r}">${r}</button>`).join('')}</div>
-    <div class="lbl">Tipo</div>
-    <div class="quals">${['','m','7','m7','7M','sus4','9','add9','º','/'].map(q => `<button data-qual="${q}">${q === '' ? 'maior' : q === '/' ? '/baixo' : q}</button>`).join('')}</div>
-    <div class="sheetrow">${sh.had ? '<button class="ghost danger" id="chDel">Remover</button>' : ''}<span class="grow"></span><button class="ghost" id="chCancel">Cancelar</button><button class="primary" id="chOk">Pronto</button></div>
-  </div></div>`;
+function curPara() { const s = S.selc; return s && S.edit ? S.edit.draft.st[s.s][s.p] : null; }
+function paraLen(p) { return p.r.reduce((n, r) => n + r.t.length, 0); }
+function selectChord(s, p, ci) {
+  S.selc = { s, p, ci }; render();
+  const el = document.querySelector('.pill.sel'); el && el.scrollIntoView && el.scrollIntoView({ block: 'nearest', inline: 'center' });
 }
+function moveChord(d) {
+  const p = curPara(); if (!p) return; const c = p.c[S.selc.ci];
+  c[0] = Math.max(0, Math.min(paraLen(p), c[0] + d)); markDirty(); render();
+}
+function deleteChord() {
+  const p = curPara(); if (!p) return; p.c.splice(S.selc.ci, 1); if (!p.c.length) delete p.c;
+  S.selc = null; markDirty(); render();
+}
+function addChordAt(s, pi, o) {
+  const p = S.edit.draft.st[s][pi]; (p.c = p.c || []).push([o, '']); const ci = p.c.length - 1;
+  S.selc = { s, p: pi, ci }; render(); inlineEdit(s, pi, ci, true);
+}
+function inlineEdit(s, pi, ci, isNew) {
+  if (!S.selc || S.selc.s !== s || S.selc.p !== pi || S.selc.ci !== ci) { S.selc = { s, p: pi, ci }; render(); }
+  const pill = document.querySelector(`.p[data-s="${s}"][data-p="${pi}"] .pill[data-ci="${ci}"]`); if (!pill) return;
+  const p = S.edit.draft.st[s][pi], chord = p.c[ci];
+  const inp = document.createElement('input');
+  inp.className = 'pill-input'; inp.value = chord[1];
+  inp.setAttribute('autocapitalize', 'off'); inp.setAttribute('autocorrect', 'off'); inp.spellcheck = false;
+  inp.size = Math.max(3, chord[1].length + 1);
+  pill.replaceWith(inp); inp.focus(); try { inp.select(); } catch {}
+  let done = false;
+  const drop = () => { p.c.splice(ci, 1); if (!p.c.length) delete p.c; S.selc = null; };
+  const commit = () => { if (done) return; done = true; const v = inp.value.trim();
+    if (v) { chord[1] = v; markDirty(); } else if (isNew) drop(); render(); };
+  const cancel = () => { if (done) return; done = true; if (isNew) drop(); render(); };
+  inp.addEventListener('blur', commit);
+  inp.addEventListener('input', () => { inp.size = Math.max(3, inp.value.length + 1); });
+  inp.addEventListener('keydown', e => { e.stopPropagation();
+    if (e.key === 'Enter') { e.preventDefault(); inp.blur(); } else if (e.key === 'Escape') { e.preventDefault(); cancel(); } });
+}
+function chordList() {
+  const out = [];
+  S.edit.draft.st.forEach((st, s) => st.forEach((p, pi) =>
+    (p.c || []).map((c, ci) => ({ s, p: pi, ci, o: c[0] })).sort((a, b) => a.o - b.o).forEach(x => out.push(x))));
+  return out;
+}
+function stepSelection(d) {
+  const arr = chordList(); if (!arr.length) return;
+  const cur = S.selc ? arr.findIndex(x => x.s === S.selc.s && x.p === S.selc.p && x.ci === S.selc.ci) : -1;
+  const n = cur < 0 ? (d > 0 ? 0 : arr.length - 1) : Math.max(0, Math.min(arr.length - 1, cur + d));
+  selectChord(arr[n].s, arr[n].p, arr[n].ci);
+}
+function loadOriginal() {
+  const base = S.songs.find(s => s.id === S.cur); if (!base) return;
+  const o = base.orig || ((base.hist || []).length ? base.hist[base.hist.length - 1] : base);
+  S.edit.draft.st = clone(o.st); S.edit.draft.tail = clone(o.tail || []); S.edit.text = songToText(S.edit.draft);
+  S.selc = null; markDirty(); S.msg = 'Cifra original carregada. Toque em ✓ Salvar para confirmar.'; render();
+}
+function renderSheet() { $('#sheetHost').innerHTML = ''; }
 function render() {
   if (S.cur) renderSong(); else renderList();
   renderSheet();
@@ -430,7 +498,7 @@ function startEdit() {
   const base = S.songs.find(s => s.id === S.cur);
   const draft = clone({ title: base.title, day: base.day, group: base.group || '', st: base.st, tail: base.tail || [] });
   S.edit = { draft, baseAt: base.at || 0, dirty: false, remote: false, text: songToText(draft), confirmDel: false };
-  S.textMode = false; S.sheet = null; S.msg = ''; S.showHist = false;
+  S.textMode = false; S.sheet = null; S.selc = null; S.moreOpen = false; S.msg = ''; S.showHist = false;
   render();
 }
 function markDirty() { if (S.edit) { S.edit.dirty = true; S.msg = ''; } }
@@ -467,11 +535,16 @@ async function save() {
   const base = S.songs.find(s => s.id === S.cur);
   const prev = { title: base.title, day: base.day, group: base.group || '', st: base.st, tail: base.tail || [], by: base.by || null, at: base.at || 0 };
   const hist = [prev, ...(base.hist || [])].slice(0, 8);
-  const body = { n: base.n, ...clone(e.draft), by: S.uid, at: Date.now(), hist };
+  const old = (base.hist || []).length ? base.hist[base.hist.length - 1] : base;
+  const orig = base.orig || { st: old.st, tail: old.tail || [] };
+  const draft = clone(e.draft);
+  draft.st.forEach(st => st.forEach(p => { if (p.c) { p.c = p.c.filter(c => c[1]); p.c.sort((a, b) => a[0] - b[0]); if (!p.c.length) delete p.c; } }));
+  const body = { n: base.n, ...draft, by: S.uid, at: Date.now(), hist, orig };
   S.saving = true; renderSaveBar();
   try {
     await S.db.collection('songs').doc(base.id).set(body);
-    S.edit = null; S.sheet = null; S.msg = 'Salvo para todos'; S.saving = false;
+    S.songs = S.songs.map(s => s.id === base.id ? { id: base.id, ...body } : s);
+    S.edit = null; S.sheet = null; S.selc = null; S.msg = 'Salvo para todos'; S.saving = false;
     render(); flash('Salvo para todos');
   } catch (err) {
     S.saving = false;
@@ -525,7 +598,7 @@ function alertNote(t) { const d = document.createElement('div'); d.className = '
 
 /* ---------- eventos ---------- */
 document.addEventListener('click', ev => {
-  const t = ev.target.closest('button, .k'); if (!t) return;
+  const t = ev.target.closest('.pill, button, .k'); if (!t) return;
   if (t.matches('.tab')) { S.day = t.dataset.day; store.set('day', S.day); return render(); }
   if (t.dataset.open) { S.cur = t.dataset.open; S.showHist = false; location.hash = 'm-' + S.cur; window.scrollTo(0, 0); return render(); }
   if (t.id === 'back') { if (S.edit && S.edit.dirty && !S.edit.leaveOk) { S.edit.leaveOk = true; S.msg = 'Você tem alterações não salvas. Toque em ← de novo para sair sem salvar.'; return renderSaveBar(); }
@@ -543,14 +616,26 @@ document.addEventListener('click', ev => {
   if (t.id === 'logout') { store.set('senha', ''); S.canWrite = null; (S.unsubs || []).forEach(u => u()); S.db = makeDb(''); subscribeAll(); return render(); }
   if (t.dataset.restore) return restoreTrash(t.dataset.restore);
   if (!S.edit) return;
-  if (t.id === 'cancelEdit') { S.edit = null; S.sheet = null; S.msg = ''; return render(); }
+  if (t.id === 'cancelEdit') { S.edit = null; S.sheet = null; S.selc = null; S.msg = ''; return render(); }
   if (t.id === 'saveEdit') return save();
-  if (t.id === 'modeTap' || t.id === 'modeText') { readMeta(); syncText(); S.textMode = t.id === 'modeText'; if (S.textMode) S.edit.text = songToText(S.edit.draft); S.sheet = null; return render(); }
+  if (t.id === 'modeText') { readMeta(); syncText(); S.textMode = !S.textMode; S.moreOpen = true; if (S.textMode) S.edit.text = songToText(S.edit.draft); S.selc = null; return render(); }
   if (t.id === 'moveUp' || t.id === 'moveDown') return swapOrder(t.id === 'moveUp' ? -1 : 1);
-  if (t.id === 'delSong') { S.edit.confirmDel = true; readMeta(); syncText(); return render(); }
+  if (t.id === 'delSong') { S.edit.confirmDel = true; S.moreOpen = true; readMeta(); syncText(); return render(); }
   if (t.id === 'delNo') { S.edit.confirmDel = false; return render(); }
   if (t.id === 'delYes') return deleteSong();
-  if (t.matches('.k')) { readMeta(); const pEl = t.closest('.p'); return openSheet(+pEl.dataset.s, +pEl.dataset.p, +t.dataset.o); }
+  if (t.matches('.pill')) {
+    const pEl = t.closest('.p'), s = +pEl.dataset.s, pi = +pEl.dataset.p, ci = +t.dataset.ci;
+    const now = Date.now(), same = S.selc && S.selc.s === s && S.selc.p === pi && S.selc.ci === ci;
+    if (same && now - (S.lastTap || 0) < 450) { S.lastTap = 0; return inlineEdit(s, pi, ci, false); }
+    S.lastTap = now; return selectChord(s, pi, ci);
+  }
+  if (t.matches('.k')) { readMeta(); const pEl = t.closest('.p'); return addChordAt(+pEl.dataset.s, +pEl.dataset.p, +t.dataset.o); }
+  if (t.id === 'selL') return moveChord(-1);
+  if (t.id === 'selR') return moveChord(1);
+  if (t.id === 'selEd') return S.selc && inlineEdit(S.selc.s, S.selc.p, S.selc.ci, false);
+  if (t.id === 'selDel') return deleteChord();
+  if (t.id === 'selOk') { S.selc = null; return render(); }
+  if (t.id === 'origEdit') { readMeta(); return loadOriginal(); }
   if (t.dataset.wrap != null) { const ta = $('#src'); if (!ta) return; const [o, c] = t.dataset.wrap.split('|');
     const a = ta.selectionStart, b = ta.selectionEnd, v = ta.value;
     let sel = v.slice(a, b);
@@ -580,7 +665,17 @@ document.addEventListener('input', ev => {
   if (['fTitle', 'fDay', 'fGroup'].includes(ev.target.id)) { readMeta(); markDirty(); const st = $('#status'); if (st) st.textContent = 'Alterações ainda não salvas'; }
   if (ev.target.id === 'chIn' && S.sheet) S.sheet.val = ev.target.value;
 });
-document.addEventListener('keydown', ev => { if (ev.key === 'Enter' && ev.target.id === 'chIn') applySheet(false); if (ev.key === 'Escape' && S.sheet) { S.sheet = null; render(); } });
+document.addEventListener('keydown', ev => {
+  if (!S.edit || S.textMode || /INPUT|TEXTAREA|SELECT/.test(ev.target.tagName)) return;
+  const k = ev.key;
+  if (k === 'ArrowLeft' || k === 'ArrowRight') { ev.preventDefault(); if (!S.selc) stepSelection(1); else moveChord(k === 'ArrowLeft' ? -1 : 1); }
+  else if (k === 'ArrowUp') { ev.preventDefault(); stepSelection(-1); }
+  else if (k === 'ArrowDown') { ev.preventDefault(); stepSelection(1); }
+  else if (k === 'Enter' && S.selc) { ev.preventDefault(); inlineEdit(S.selc.s, S.selc.p, S.selc.ci, false); }
+  else if ((k === 'Delete' || k === 'Backspace') && S.selc) { ev.preventDefault(); deleteChord(); }
+  else if (k === 'Escape' && S.selc) { S.selc = null; render(); }
+});
+document.addEventListener('toggle', ev => { if (ev.target.id === 'more') S.moreOpen = ev.target.open; }, true);
 window.addEventListener('hashchange', () => { const m = location.hash.match(/^#m-(.+)$/); if (!S.edit) { S.cur = m ? m[1] : null; render(); } });
 
 /* ---------- dados (Supabase: tabela hinario_docs(col, id, data)) ---------- */
